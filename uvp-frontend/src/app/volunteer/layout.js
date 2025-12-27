@@ -10,7 +10,7 @@ export default function VolunteerLayout({ children }) {
 
       {/* Main content */}
       <main className="flex-1 md:ml-64 pt-20">
-        <div className="p-8 max-w-7xl mx-auto">
+        <div className="max-w-7xl mx-auto">
           {children}
         </div>
       </main>

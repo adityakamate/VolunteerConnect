@@ -22,8 +22,12 @@ import org.springframework.stereotype.Service;
 import lombok.RequiredArgsConstructor;
 
 import java.io.*;
+import java.net.InetAddress;
+import java.net.NetworkInterface;
+import java.net.SocketException;
 import java.time.LocalDate;
 import java.util.Base64;
+import java.util.Enumeration;
 import java.util.List;
 
 @Service
@@ -53,7 +57,10 @@ public class CertificateService {
 
         // 2. Generate QR code that points to certificate download URL
         // Example URL: http://server/api/certificates/download/{userId}/{taskId}
-        String certUrl = "http://10.151.14.112:8080/api/volunteer/certificates/download/" + userId + "/" + taskId;
+        // Example URL:
+        // http://{dynamic_ip}:8080/api/certificates/download/{userId}/{taskId}
+        String certUrl = "http://" + getServerIp() + ":8080/api/volunteer/certificates/download/" + userId + "/"
+                + taskId;
         String qrBase64 = generateQRCode(certUrl);
 
         // 3. Create PDF with QR Code embedded
@@ -109,6 +116,46 @@ public class CertificateService {
         certificate.setBlock(!certificate.isBlock()); // flip the boolean
         certificateRepository.save(certificate);
         return "Changes applied succesfully";
+    }
+
+    private String getServerIp() {
+        String fallbackIp = null;
+        try {
+            Enumeration<NetworkInterface> interfaces = NetworkInterface.getNetworkInterfaces();
+            if (interfaces == null)
+                return "localhost";
+
+            while (interfaces.hasMoreElements()) {
+                NetworkInterface iface = interfaces.nextElement();
+                if (iface.isLoopback() || !iface.isUp())
+                    continue;
+
+                Enumeration<InetAddress> addresses = iface.getInetAddresses();
+                while (addresses.hasMoreElements()) {
+                    InetAddress addr = addresses.nextElement();
+                    if (addr.isSiteLocalAddress() && !addr.isLoopbackAddress()
+                            && addr.getHostAddress().indexOf(':') == -1) {
+                        String ip = addr.getHostAddress();
+                        // Check for Wi-Fi
+                        boolean isWifi = iface.getDisplayName().toLowerCase().contains("wi-fi") ||
+                                iface.getName().toLowerCase().contains("wlan") ||
+                                iface.getName().toLowerCase().contains("wireless");
+
+                        if (isWifi) {
+                            return ip; // Found Wi-Fi, return immediately
+                        }
+
+                        // Keep the first valid IP as fallback
+                        if (fallbackIp == null) {
+                            fallbackIp = ip;
+                        }
+                    }
+                }
+            }
+        } catch (SocketException e) {
+            e.printStackTrace();
+        }
+        return fallbackIp != null ? fallbackIp : "localhost";
     }
 
 }

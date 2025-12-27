@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { getRequest, putRequest } from "@/lib/api";
 import { motion } from "framer-motion";
-import { FaArrowLeft, FaCheckCircle, FaSpinner, FaExclamationTriangle, FaImage } from "react-icons/fa";
+import { ArrowLeft, CheckCircle2, Loader2, AlertTriangle, Image as ImageIcon, User, Calendar, Mail, Phone, Clock } from "lucide-react";
 
 export default function NGOViewSubmissionPage() {
   const params = useParams();
@@ -66,158 +66,172 @@ export default function NGOViewSubmissionPage() {
       router.push("/ngo/submissions");
     } catch (e) {
       console.error(e);
-      alert("Failed to approve submission");
+      alert("Failed to approve submission. It might already be processed.");
     } finally {
       setApproving(false);
     }
   };
 
   return (
-    <div className="space-y-6 p-6 max-w-7xl mx-auto">
-      <motion.div 
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5 }}
-        className="mb-8"
-      >
-        <h1 className="text-3xl font-bold text-indigo-900 mb-2">Submission Details</h1>
-        <p className="text-gray-600">Review volunteer submission information</p>
-      </motion.div>
-
-      <motion.div 
-        initial={{ opacity: 0, y: -10 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.3 }}
-        className="flex items-center gap-3 mb-6"
-      >
-        <motion.button 
-          onClick={() => router.back()} 
-          className="px-4 py-2 rounded-lg bg-indigo-50 text-indigo-700 hover:bg-indigo-100 transition-all flex items-center gap-2 shadow-sm"
-          whileHover={{ scale: 1.03 }}
-          whileTap={{ scale: 0.98 }}
+    <div className="min-h-screen w-full font-sans text-slate-900 bg-[#F8FAFC]">
+      <div className="max-w-7xl mx-auto px-6 py-12 space-y-8">
+        {/* Nav & Header */}
+        <motion.div
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="flex flex-col gap-6"
         >
-          <FaArrowLeft className="text-sm" /> Back to Submissions
-        </motion.button>
-      </motion.div>
-
-      {loading && (
-        <motion.div 
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          className="p-12 flex flex-col items-center justify-center"
-        >
-          <FaSpinner className="text-indigo-600 text-3xl animate-spin mb-4" />
-          <p className="text-gray-600">Loading submission details...</p>
-        </motion.div>
-      )}
-      
-      {error && (
-        <motion.div 
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          className="p-12 flex flex-col items-center justify-center text-red-600"
-        >
-          <FaExclamationTriangle className="text-3xl mb-4" />
-          <p>{error}</p>
-        </motion.div>
-      )}
-
-      {!loading && !error && submission && (
-        <motion.div 
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 0.5 }}
-          className="grid grid-cols-1 lg:grid-cols-3 gap-6"
-        >
-          <motion.div 
-            className="lg:col-span-2 bg-white rounded-2xl shadow-md p-6 border border-indigo-50"
-            initial={{ x: -20, opacity: 0 }}
-            animate={{ x: 0, opacity: 1 }}
-            transition={{ delay: 0.2 }}
+          <button
+            onClick={() => router.back()}
+            className="self-start flex items-center gap-2 text-slate-500 hover:text-indigo-600 transition-colors font-bold"
           >
-            <h2 className="text-xl font-semibold mb-4 text-indigo-800 flex items-center gap-2">
-              <FaImage className="text-indigo-600" /> Submitted Image
-            </h2>
-            {submission.proofFileUrl ? (
-              <motion.img 
-                src={submission.proofFileUrl} 
-                alt="Submission" 
-                className="w-full rounded-xl border border-indigo-100 shadow-sm" 
-                initial={{ scale: 0.95, opacity: 0 }}
-                animate={{ scale: 1, opacity: 1 }}
-                transition={{ delay: 0.3 }}
-              />
-            ) : (
-              <div className="text-gray-500 p-12 bg-gray-50 rounded-xl border border-dashed border-gray-300 flex flex-col items-center justify-center">
-                <FaImage className="text-gray-400 text-4xl mb-3" />
-                <p>No image available</p>
+            <ArrowLeft size={20} />
+            <span>Back to List</span>
+          </button>
+
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <h1 className="text-3xl md:text-4xl font-bold text-slate-900">Submission Details</h1>
+            <div className="flex items-center gap-2 px-4 py-2 bg-white rounded-full border border-slate-200 shadow-sm text-sm font-semibold text-slate-600">
+              <Clock size={16} className="text-indigo-500" />
+              Submitted: {loading ? "..." : formatDate(submission?.submittedAt)}
+            </div>
+          </div>
+        </motion.div>
+
+        {loading && (
+          <div className="h-96 flex flex-col items-center justify-center bg-white rounded-[2rem] shadow-sm border border-slate-100">
+            <Loader2 className="animate-spin text-indigo-600 mb-4" size={40} />
+            <p className="text-slate-500 font-medium">Retrieving submission proof...</p>
+          </div>
+        )}
+
+        {error && (
+          <div className="h-64 flex flex-col items-center justify-center bg-red-50 rounded-[2rem] border border-red-100 text-red-600">
+            <AlertTriangle size={32} className="mb-2" />
+            <p className="font-bold">{error}</p>
+          </div>
+        )}
+
+        {!loading && !error && submission && (
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            {/* Left Column: Proof Image */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.1 }}
+              className="lg:col-span-2 space-y-4"
+            >
+              <div className="bg-white rounded-[2.5rem] p-4 shadow-xl shadow-slate-200/50 border border-white overflow-hidden">
+                <div className="flex items-center gap-2 mb-4 px-4 pt-2">
+                  <ImageIcon className="text-indigo-600" size={20} />
+                  <h2 className="text-lg font-bold text-slate-900">Proof of Work</h2>
+                </div>
+
+                <div className="bg-slate-50 rounded-[2rem] border-2 border-slate-100 min-h-[400px] flex items-center justify-center overflow-hidden relative">
+                  {submission.proofFileUrl ? (
+                    <img
+                      src={submission.proofFileUrl}
+                      alt="Proof"
+                      className="w-full h-auto object-contain max-h-[600px]"
+                    />
+                  ) : (
+                    <div className="text-center text-slate-400">
+                      <ImageIcon size={64} className="mx-auto mb-4 opacity-50" />
+                      <p className="font-medium">No image attached</p>
+                    </div>
+                  )}
+                </div>
               </div>
-            )}
-          </motion.div>
-          
-          <motion.div 
-            className="bg-white rounded-2xl shadow-md p-6 space-y-5 border border-indigo-50"
-            initial={{ x: 20, opacity: 0 }}
-            animate={{ x: 0, opacity: 1 }}
-            transition={{ delay: 0.2 }}
-          >
-            <div>
-              <div className="text-sm font-medium text-indigo-600 mb-1">Volunteer</div>
-              <div className="text-gray-900 font-medium text-lg">{submission.volunteerName}</div>
-            </div>
-            <div>
-              <div className="text-sm font-medium text-indigo-600 mb-1">Task</div>
-              <div className="text-gray-900 font-medium text-lg">{submission.taskTitle}</div>
-            </div>
-            <div>
-              <div className="text-sm font-medium text-indigo-600 mb-1">Submitted At</div>
-              <div className="text-gray-900 font-medium">{formatDate(submission.submittedAt)}</div>
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
-              <div>
-                <div className="text-sm font-medium text-indigo-600 mb-1">Email</div>
-                <div className="text-gray-900 font-medium break-all">{submission.volunteerEmail}</div>
-              </div>
-              <div>
-                <div className="text-sm font-medium text-indigo-600 mb-1">Phone</div>
-                <div className="text-gray-900 font-medium">{submission.volunteerPhone || "Not provided"}</div>
-              </div>
-            </div>
-            <div className="pt-2">
-              <div className="text-sm font-medium text-indigo-600 mb-1">Status</div>
-              <div className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${
-                submission.status === "APPROVED" 
-                  ? "bg-green-100 text-green-800" 
-                  : "bg-yellow-100 text-yellow-800"
-              }`}>
-                {submission.status === "APPROVED" && <FaCheckCircle className="mr-1" />}
-                {submission.status}
-              </div>
-            </div>
-            {submission.status !== "APPROVED" && (
-              <motion.button
-                onClick={handleApprove}
-                disabled={approving}
-                className="w-full inline-flex items-center justify-center px-4 py-3 rounded-xl bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white font-medium shadow-sm hover:shadow-md disabled:opacity-50 transition-all mt-4"
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-              >
-                {approving ? (
-                  <>
-                    <FaSpinner className="animate-spin mr-2" /> Approving...
-                  </>
-                ) : (
-                  <>
-                    <FaCheckCircle className="mr-2" /> Approve Submission
-                  </>
+            </motion.div>
+
+            {/* Right Column: Details & Action */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.2 }}
+              className="space-y-6"
+            >
+              <div className="bg-white rounded-[2.5rem] p-8 shadow-xl shadow-slate-200/50 border border-white space-y-8">
+                {/* Task & Volunteer Info */}
+                <div>
+                  <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Task</h3>
+                  <p className="text-xl font-bold text-slate-900 leading-tight mb-6">{submission.taskTitle}</p>
+
+                  <div className="space-y-4">
+                    <div className="flex items-center gap-4">
+                      <div className="w-10 h-10 rounded-full bg-slate-50 flex items-center justify-center text-indigo-600">
+                        <User size={20} />
+                      </div>
+                      <div>
+                        <p className="text-xs text-slate-400 font-bold uppercase">Volunteer</p>
+                        <p className="font-bold text-slate-700">{submission.volunteerName}</p>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-4">
+                      <div className="w-10 h-10 rounded-full bg-slate-50 flex items-center justify-center text-indigo-600">
+                        <Mail size={18} />
+                      </div>
+                      <div className="overflow-hidden">
+                        <p className="text-xs text-slate-400 font-bold uppercase">Email</p>
+                        <p className="font-bold text-slate-700 truncate">{submission.volunteerEmail}</p>
+                      </div>
+                    </div>
+
+                    {submission.volunteerPhone && (
+                      <div className="flex items-center gap-4">
+                        <div className="w-10 h-10 rounded-full bg-slate-50 flex items-center justify-center text-indigo-600">
+                          <Phone size={18} />
+                        </div>
+                        <div>
+                          <p className="text-xs text-slate-400 font-bold uppercase">Phone</p>
+                          <p className="font-bold text-slate-700">{submission.volunteerPhone}</p>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                <div className="h-px bg-slate-100" />
+
+                {/* Status & Actions */}
+                <div>
+                  <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-4">Current Status</h3>
+                  <div className={`inline-flex items-center gap-2 px-5 py-2.5 rounded-xl font-bold ${submission.status === "APPROVED"
+                      ? "bg-green-100 text-green-700"
+                      : "bg-amber-100 text-amber-700"
+                    }`}>
+                    {submission.status === "APPROVED" ? (
+                      <CheckCircle2 size={20} />
+                    ) : (
+                      <Clock size={20} />
+                    )}
+                    {submission.status}
+                  </div>
+                </div>
+
+                {submission.status !== "APPROVED" && (
+                  <button
+                    onClick={handleApprove}
+                    disabled={approving}
+                    className="w-full py-4 rounded-2xl bg-indigo-600 text-white font-bold text-lg hover:bg-indigo-700 hover:shadow-lg hover:shadow-indigo-500/30 transition-all active:scale-95 disabled:opacity-50 disabled:scale-100 flex items-center justify-center gap-2"
+                  >
+                    {approving ? (
+                      <>
+                        <Loader2 className="animate-spin" /> Verifying...
+                      </>
+                    ) : (
+                      <>
+                        <CheckCircle2 /> Approve & Close
+                      </>
+                    )}
+                  </button>
                 )}
-              </motion.button>
-            )}
-          </motion.div>
-        </motion.div>
-      )}
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </div>
     </div>
   );
 }
-
-

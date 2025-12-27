@@ -91,8 +91,8 @@ export default function TasksPage() {
                   key={tab.id}
                   onClick={() => handleTabChange(tab.id)}
                   className={`relative px-8 py-3 rounded-xl text-sm font-bold transition-all duration-300 overflow-hidden ${activeTab === tab.id
-                      ? "text-slate-900 shadow-lg"
-                      : "text-slate-300 hover:text-white hover:bg-white/5"
+                    ? "text-slate-900 shadow-lg"
+                    : "text-slate-300 hover:text-white hover:bg-white/5"
                     }`}
                 >
                   {activeTab === tab.id && (
@@ -151,7 +151,7 @@ export default function TasksPage() {
                   >
                     {/* Image Section */}
                     <div className="w-full md:w-72 h-56 md:h-auto shrink-0 relative overflow-hidden rounded-[2rem]">
-                      <div className="absolute inset-0 bg-slate-200 animate-pulse" />
+
                       {task.imageUrl ? (
                         <img
                           src={task.imageUrl}
@@ -167,8 +167,8 @@ export default function TasksPage() {
                       {/* Floating Badge */}
                       <div className="absolute top-4 left-4">
                         <div className={`px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-wider shadow-lg backdrop-blur-xl border border-white/20 ${task.status === 'OPEN'
-                            ? 'bg-emerald-500/90 text-white'
-                            : 'bg-slate-800/90 text-white'
+                          ? 'bg-emerald-500/90 text-white'
+                          : 'bg-slate-800/90 text-white'
                           }`}>
                           {task.status}
                         </div>

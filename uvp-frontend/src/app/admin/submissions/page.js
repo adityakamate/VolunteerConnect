@@ -3,20 +3,26 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { getRequest, putRequest } from "@/lib/api";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
+import { FileCheck, CheckCircle2, Clock, Calendar, User, FileText, ChevronRight, XCircle, Search, Filter } from "lucide-react";
 
 export default function AdminSubmissionsPage() {
   const [submissions, setSubmissions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [activeTab, setActiveTab] = useState("under_review");
-  const [hoveredRow, setHoveredRow] = useState(null);
 
   const formatDate = (value) => {
     if (!value) return "-";
     const date = new Date(value);
     if (isNaN(date.getTime())) return value;
-    return date.toLocaleString();
+    return date.toLocaleDateString(undefined, {
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
   };
 
   const fetchSubmissions = async (tab) => {
@@ -37,7 +43,7 @@ export default function AdminSubmissionsPage() {
     } catch (e) {
       console.error(e);
       setSubmissions([]);
-      setError(null);
+      setError("Failed to load submissions");
     } finally {
       setLoading(false);
     }
@@ -47,196 +53,123 @@ export default function AdminSubmissionsPage() {
     fetchSubmissions(activeTab);
   }, [activeTab]);
 
-  const handleApprove = async (submissionId) => {
-    try {
-      const confirmIssue = window.confirm("Approve this submission?");
-      if (!confirmIssue) return;
-      const token = localStorage.getItem("token");
-      await putRequest(`/organization/update-submission/${submissionId}`, {}, { headers: { Authorization: `Bearer ${token}` } });
-      fetchSubmissions(activeTab);
-    } catch (e) {
-      console.error(e);
-      alert("Failed to approve submission");
-    }
-  };
-
   const tabs = [
-    { id: "under_review", label: "Under Review", status: "UNDER_REVIEW", icon: (
-      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-      </svg>
-    ) },
-    { id: "approved", label: "Approved", status: "APPROVED", icon: (
-      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
-      </svg>
-    ) },
+    { id: "under_review", label: "Pending Review", icon: <Clock size={18} /> },
+    { id: "approved", label: "Approved History", icon: <CheckCircle2 size={18} /> },
   ];
 
-  const filteredSubmissions = submissions || [];
-
-  const getStatusColor = (status) => {
-    switch(status) {
-      case "APPROVED":
-        return "bg-emerald-100 text-emerald-800 border-emerald-200";
-      case "REJECTED":
-        return "bg-red-100 text-red-800 border-red-200";
-      default:
-        return "bg-amber-100 text-amber-800 border-amber-200";
-    }
-  };
-
-  const getStatusDot = (status) => {
-    switch(status) {
-      case "APPROVED":
-        return "bg-emerald-500";
-      case "REJECTED":
-        return "bg-red-500";
-      default:
-        return "bg-amber-500";
-    }
-  };
-
   return (
-    <div className="p-6 max-w-7xl mx-auto">
-      <motion.div 
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5 }}
-        className="mb-8"
-      >
-        <h1 className="text-3xl font-bold text-indigo-900 mb-2">Submission Management</h1>
-        <p className="text-gray-600">Review volunteer submissions and issue certificates</p>
-      </motion.div>
+    <div className="space-y-8">
+      {/* Header */}
+      <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
+        <motion.div
+          initial={{ opacity: 0, x: -20 }}
+          animate={{ opacity: 1, x: 0 }}
+        >
+          <h1 className="text-4xl font-bold text-slate-900 tracking-tight">Access Submissions</h1>
+          <p className="text-slate-500 text-lg mt-2">Review proof of work and manage volunteer approvals.</p>
+        </motion.div>
+      </div>
 
       {/* Tabs */}
-      <motion.div 
+      <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5, delay: 0.2 }}
-        className="bg-white rounded-2xl shadow-lg p-4 mb-6 border border-indigo-100"
+        transition={{ delay: 0.1 }}
+        className="flex p-1.5 bg-white rounded-2xl shadow-sm border border-slate-200 w-fit"
       >
-        <div className="flex flex-wrap gap-3">
-          {tabs.map((tab,index) => (
-            <button
-              key={index}
-              onClick={() => setActiveTab(tab.id)}
-              className={`flex items-center gap-2 px-6 py-3 rounded-xl font-medium transition-all duration-200 ${
-                activeTab === tab.id
-                  ? "bg-indigo-600 text-white shadow-md"
-                  : "text-gray-700 hover:bg-indigo-50 border border-transparent hover:border-indigo-100"
+        {tabs.map((tab) => (
+          <button
+            key={tab.id}
+            onClick={() => setActiveTab(tab.id)}
+            className={`flex items-center gap-2 px-5 py-2.5 rounded-xl font-bold text-sm transition-all duration-300 ${activeTab === tab.id
+                ? "bg-indigo-600 text-white shadow-lg shadow-indigo-500/30"
+                : "text-slate-500 hover:text-slate-700 hover:bg-slate-50"
               }`}
-            >
-              <span className="flex items-center justify-center w-5 h-5">
-                {tab.icon}
-              </span>
-              <span>{tab.label}</span>
-              <span className="ml-1 flex items-center justify-center bg-white text-indigo-600 bg-opacity-20 text-xs rounded-full w-5 h-5">
-                {activeTab === tab.id ? filteredSubmissions.length : ""}
-              </span>
-            </button>
-          ))}
-        </div>
+          >
+            {tab.icon}
+            <span>{tab.label}</span>
+          </button>
+        ))}
       </motion.div>
 
-      <motion.div 
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ duration: 0.5, delay: 0.4 }}
-        className="bg-white rounded-2xl shadow-lg border border-indigo-100 overflow-hidden"
-      >
-        {error && (
-          <div className="p-4 bg-red-50 border-b border-red-100 text-red-700 flex items-center">
-            <svg className="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
-              <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
-            </svg>
-            {error}
-          </div>
-        )}
-        
+      {/* Content */}
+      <div className="min-h-[400px]">
         {loading ? (
-          <div className="p-8 flex justify-center items-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-indigo-500"></div>
+          <div className="grid grid-cols-1 gap-4">
+            {[...Array(3)].map((_, i) => (
+              <div key={i} className="bg-white p-6 rounded-[1.5rem] border border-slate-100 shadow-sm animate-pulse flex items-center justify-between">
+                <div className="w-1/3 space-y-2">
+                  <div className="h-5 bg-slate-100 rounded-full w-3/4" />
+                  <div className="h-4 bg-slate-50 rounded-full w-1/2" />
+                </div>
+                <div className="h-10 w-24 bg-slate-100 rounded-xl" />
+              </div>
+            ))}
           </div>
+        ) : error ? (
+          <div className="text-center py-20 bg-white rounded-[2.5rem] border border-dashed border-red-200 text-red-500">
+            <XCircle size={32} className="mx-auto mb-2" />
+            <p>{error}</p>
+          </div>
+        ) : submissions.length === 0 ? (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="text-center py-32 bg-white rounded-[2.5rem] border border-dashed border-slate-200 shadow-sm"
+          >
+            <div className="w-24 h-24 bg-slate-50 text-slate-300 rounded-full flex items-center justify-center mx-auto mb-6">
+              <FileCheck size={48} />
+            </div>
+            <h3 className="text-2xl font-bold text-slate-900">No submissions found</h3>
+            <p className="text-slate-500 mt-2">
+              {activeTab === 'approved' ? "No approved submissions yet." : "You're all caught up! No pending reviews."}
+            </p>
+          </motion.div>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="min-w-full text-sm">
-              <thead className="bg-indigo-50 text-indigo-900">
-                <tr>
-                  <th className="text-left px-6 py-4 font-semibold">User</th>
-                  <th className="text-left px-6 py-4 font-semibold">Task</th>
-                  <th className="text-left px-6 py-4 font-semibold">Submitted</th>
-                  <th className="text-left px-6 py-4 font-semibold">Status</th>
-                  <th className="text-center px-6 py-4 font-semibold">Action</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filteredSubmissions.map((s, idx) => (
-                  <motion.tr 
-                    key={idx} 
-                    className={`border-t border-indigo-50 transition-all duration-200 ${hoveredRow === idx ? 'bg-indigo-50' : idx % 2 === 0 ? 'bg-white' : 'bg-indigo-25'}`}
-                    onMouseEnter={() => setHoveredRow(idx)}
-                    onMouseLeave={() => setHoveredRow(null)}
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.3, delay: 0.1 * idx }}
-                  >
-                    <td className="px-6 py-4 font-medium text-indigo-900">{s.userName}</td>
-                    <td className="px-6 py-4 text-gray-700">{s.taskName}</td>
-                    <td className="px-6 py-4 text-gray-600 whitespace-nowrap">{formatDate(s.submittedAt)}</td>
-                    <td className="px-6 py-4">
-                      <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold border ${getStatusColor(s.status)}`}>
-                        <span className={`w-1.5 h-1.5 rounded-full ${getStatusDot(s.status)}`} />
-                        {s.status}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 text-center">
-                      <div className="flex items-center justify-center gap-2">
-                        <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-                          <Link 
-                            href={`/admin/submissions/${s.submissionId}`} 
-                            className="inline-flex items-center justify-center px-4 py-2 rounded-xl bg-gradient-to-r from-indigo-600 to-indigo-700 hover:from-indigo-700 hover:to-indigo-800 text-white text-sm font-medium shadow-sm hover:shadow transition-all duration-200"
-                          >
-                            <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                            </svg>
-                            View
-                          </Link>
-                        </motion.div>
+          <div className="grid grid-cols-1 gap-4">
+            <AnimatePresence mode="popLayout">
+              {submissions.map((s, idx) => (
+                <motion.div
+                  key={s.submissionId || idx}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: idx * 0.05 }}
+                  className="group bg-white rounded-[1.5rem] p-5 md:p-6 shadow-sm hover:shadow-xl hover:shadow-indigo-500/10 border border-slate-100 hover:border-indigo-100 transition-all duration-300"
+                >
+                  <div className="flex flex-col md:flex-row items-center gap-6">
+                    <div className="flex-1 w-full text-center md:text-left space-y-2">
+                      <h3 className="text-lg font-bold text-slate-900 group-hover:text-indigo-600 transition-colors">
+                        {s.taskName}
+                      </h3>
+                      <div className="flex flex-wrap items-center justify-center md:justify-start gap-x-6 gap-y-2 text-sm text-slate-500 font-medium">
+                        <span className="flex items-center gap-1.5">
+                          <User size={14} className="text-indigo-400" />
+                          {s.userName}
+                        </span>
+                        <span className="flex items-center gap-1.5">
+                          <Calendar size={14} className="text-indigo-400" />
+                          Submitted: {formatDate(s.submittedAt)}
+                        </span>
                       </div>
-                    </td>
-                  </motion.tr>
-                ))}
-                {filteredSubmissions.length === 0 && (
-                  <tr>
-                    <td colSpan={5} className="px-6 py-16 text-center">
-                      <motion.div 
-                        initial={{ opacity: 0, scale: 0.9 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        transition={{ duration: 0.5 }}
-                        className="flex flex-col items-center gap-4"
+                    </div>
+
+                    <div className="flex items-center gap-4">
+                      <Link
+                        href={`/admin/submissions/${s.submissionId}`}
+                        className="flex items-center gap-2 px-6 py-3 rounded-xl bg-slate-50 text-slate-700 font-bold hover:bg-indigo-600 hover:text-white transition-all shadow-sm group-hover:shadow-md"
                       >
-                        <div className="w-20 h-20 rounded-full bg-indigo-50 text-indigo-600 flex items-center justify-center shadow-inner text-3xl">
-                          {activeTab === 'approved' ? '✓' : '📋'}
-                        </div>
-                        <div className="text-xl font-medium text-indigo-900">No {activeTab === 'approved' ? 'approved' : 'under review'} submissions</div>
-                        <div className="text-gray-500 max-w-sm text-center">
-                          {activeTab === 'approved' 
-                            ? 'Approved submissions will appear here once you review and approve them' 
-                            : 'You will see user proofs here once they are submitted for review'}
-                        </div>
-                      </motion.div>
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
+                        <span>Review Details</span>
+                        <ChevronRight size={18} />
+                      </Link>
+                    </div>
+                  </div>
+                </motion.div>
+              ))}
+            </AnimatePresence>
           </div>
         )}
-      </motion.div>
+      </div>
     </div>
   );
 }
-
-

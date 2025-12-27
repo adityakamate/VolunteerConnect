@@ -2,16 +2,15 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { getRequest } from "@/lib/api";
-import { motion } from "framer-motion";
-import { FaSearch, FaUserSlash, FaUserCheck, FaTrash, FaUser } from "react-icons/fa";
+import { motion, AnimatePresence } from "framer-motion";
+import { Search, UserX, UserCheck, Trash2, User, Mail, Phone, MapPin, Shield, RefreshCw } from "lucide-react";
 
 export default function AdminUsersPage() {
   const [query, setQuery] = useState("");
   const [users, setUsers] = useState([]);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [hoveredRow, setHoveredRow] = useState(null);
-  const pageTitle = "User Management";
+  const [selectedUser, setSelectedUser] = useState(null);
 
   useEffect(() => {
     const fetchUsers = async () => {
@@ -41,146 +40,162 @@ export default function AdminUsersPage() {
     );
   }, [users, query]);
 
-  const toggleBlock = (id) => {
-    // Placeholder UI toggle. Replace with PUT/POST when backend supports.
-    setUsers((prev) => prev.map((u) => (u.id === id ? { ...u, status: u.status === "ACTIVE" ? "BLOCKED" : "ACTIVE" } : u)));
-  };
-
   const removeUser = (id) => {
-    if (!window.confirm("Delete this user?")) return;
+    if (!window.confirm("Delete this user? This action cannot be undone.")) return;
     setUsers((prev) => prev.filter((u) => u.id !== id));
   };
 
-  const resetPassword = (id) => {
-    alert(`Password reset initiated for user #${id}`);
-  };
-
-  const containerVariants = {
-    hidden: { opacity: 0 },
-    visible: { 
-      opacity: 1,
-      transition: { 
-        staggerChildren: 0.05 
-      } 
-    }
-  };
-
-  const itemVariants = {
-    hidden: { opacity: 0, y: 20 },
-    visible: { opacity: 1, y: 0 }
+  const toggleBlock = (id) => {
+    setUsers((prev) => prev.map((u) => (u.id === id ? { ...u, status: u.status === "ACTIVE" ? "BLOCKED" : "ACTIVE" } : u)));
+    alert("User status updated (Simulation)");
   };
 
   return (
-    <div className="space-y-6">
-      <motion.div 
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5 }}
-        className="mb-8"
-      >
-        <h1 className="text-3xl font-bold text-indigo-900 mb-2">User Management</h1>
-        <p className="text-gray-600">Manage user accounts and permissions</p>
-      </motion.div>
-      
-      <motion.div 
-        initial={{ opacity: 0, y: -10 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5 }}
-        className="bg-white rounded-xl p-5 shadow-md border border-gray-100"
-      >
-        <div className="relative">
-          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-            <FaSearch className="text-gray-400" />
+    <div className="space-y-8">
+      {/* Header */}
+      <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
+        <motion.div
+          initial={{ opacity: 0, x: -20 }}
+          animate={{ opacity: 1, x: 0 }}
+        >
+          <h1 className="text-4xl font-bold text-slate-900 tracking-tight">User Management</h1>
+          <p className="text-slate-500 text-lg mt-2">Manage user accounts, permissions, and security.</p>
+        </motion.div>
+
+        <motion.div
+          initial={{ opacity: 0, x: 20 }}
+          animate={{ opacity: 1, x: 0 }}
+          className="relative"
+        >
+          <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400">
+            <Search size={20} />
           </div>
           <input
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="Search by name, email, phone, location"
-            className="w-full border border-gray-200 rounded-lg pl-10 pr-4 py-3 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all"
+            placeholder="Search users..."
+            className="w-full md:w-80 pl-11 pr-5 py-3 rounded-2xl bg-white border border-slate-200 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 shadow-sm transition-all outline-none font-medium text-slate-700 placeholder:text-slate-400"
           />
-        </div>
-      </motion.div>
+        </motion.div>
+      </div>
 
-      <motion.div 
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ duration: 0.5, delay: 0.2 }}
-        className="bg-white rounded-xl shadow-md border border-gray-100 overflow-hidden"
-      >
-        {error && (
-          <motion.div 
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            className="p-6 text-red-600 flex items-center justify-center"
-          >
-            <FaUserSlash className="mr-2" /> {error}
-          </motion.div>
-        )}
-        
-        {loading && (
-          <div className="p-10 flex justify-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-indigo-500"></div>
+      {/* Content */}
+      <div className="bg-white rounded-[2.5rem] shadow-xl shadow-slate-200/50 border border-white overflow-hidden min-h-[500px]">
+        {loading ? (
+          <div className="p-8 space-y-4">
+            {[...Array(5)].map((_, i) => (
+              <div key={i} className="flex items-center gap-4 p-4 border-b border-slate-50 animate-pulse">
+                <div className="w-10 h-10 rounded-full bg-slate-100" />
+                <div className="flex-1 space-y-2">
+                  <div className="w-1/4 h-5 bg-slate-100 rounded-md" />
+                  <div className="w-1/3 h-4 bg-slate-50 rounded-md" />
+                </div>
+                <div className="w-20 h-8 bg-slate-100 rounded-lg" />
+              </div>
+            ))}
           </div>
-        )}
-        
-        {!loading && !error && filtered.length === 0 && (
-          <motion.div 
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            className="p-10 text-center text-gray-500"
-          >
-            <FaUser className="mx-auto text-4xl mb-3 text-indigo-300" />
-            <p className="text-lg">No users found</p>
-            <p className="text-sm">Try adjusting your search criteria</p>
-          </motion.div>
-        )}
-        
-        {!loading && filtered.length > 0 && (
+        ) : error ? (
+          <div className="flex flex-col items-center justify-center h-96 text-center p-8">
+            <div className="w-16 h-16 bg-red-50 text-red-500 rounded-full flex items-center justify-center mb-4">
+              <UserX size={32} />
+            </div>
+            <h3 className="text-xl font-bold text-slate-900">{error}</h3>
+            <p className="text-slate-500">Please try refreshing the page.</p>
+          </div>
+        ) : filtered.length === 0 ? (
+          <div className="flex flex-col items-center justify-center h-96 text-center p-8">
+            <div className="w-16 h-16 bg-slate-50 text-slate-300 rounded-full flex items-center justify-center mb-4">
+              <Search size={32} />
+            </div>
+            <h3 className="text-xl font-bold text-slate-900">No users found</h3>
+            <p className="text-slate-500">Try adjusting your search query.</p>
+          </div>
+        ) : (
           <div className="overflow-x-auto">
-            <table className="min-w-full text-sm">
-              <thead className="bg-indigo-50 text-indigo-700">
-                <tr>
-                  <th className="text-left px-6 py-4 font-semibold">Name</th>
-                  <th className="text-left px-6 py-4 font-semibold">Email</th>
-                  <th className="text-left px-6 py-4 font-semibold">Phone</th>
-                  <th className="text-left px-6 py-4 font-semibold">Location</th>
-                  <th className="text-right px-6 py-4 font-semibold">Actions</th>
+            <table className="w-full text-left border-collapse">
+              <thead>
+                <tr className="border-b border-slate-100 bg-slate-50/50">
+                  <th className="px-8 py-5 text-xs font-bold text-slate-400 uppercase tracking-wider">User</th>
+                  <th className="px-8 py-5 text-xs font-bold text-slate-400 uppercase tracking-wider">Contact</th>
+                  <th className="px-8 py-5 text-xs font-bold text-slate-400 uppercase tracking-wider">Location</th>
+                  <th className="px-8 py-5 text-xs font-bold text-slate-400 uppercase tracking-wider text-right">Actions</th>
                 </tr>
               </thead>
-              <motion.tbody variants={containerVariants} initial="hidden" animate="visible">
-                {filtered.map((u, index) => (
-                  <motion.tr 
-                    key={index} 
-                    variants={itemVariants}
-                    onMouseEnter={() => setHoveredRow(u.id)}
-                    onMouseLeave={() => setHoveredRow(null)}
-                    className={`border-t border-gray-100 ${index % 2 === 0 ? 'bg-white' : 'bg-gray-50'} ${hoveredRow === u.id ? 'bg-indigo-50' : ''} transition-colors duration-150`}
-                  >
-                    <td className="px-6 py-4 font-medium text-indigo-700">{u.name}</td>
-                    <td className="px-6 py-4">{u.email}</td>
-                    <td className="px-6 py-4">{u.phone || '-'}</td>
-                    <td className="px-6 py-4">{u.location || '-'}</td>
-                    <td className="px-6 py-4">
-                      <div className="flex gap-3 justify-end">
-                        <motion.button 
-                          whileHover={{ scale: 1.05 }}
-                          whileTap={{ scale: 0.95 }}
-                          onClick={() => removeUser(u.id)} 
-                          className="px-4 py-2 rounded-lg bg-red-100 text-red-700 flex items-center transition-all hover:bg-red-200"
-                        >
-                          <FaTrash className="mr-2" /> Delete
-                        </motion.button>
-                      </div>
-                    </td>
-                  </motion.tr>
-                ))}
-              </motion.tbody>
+              <tbody>
+                <AnimatePresence>
+                  {filtered.map((u, i) => (
+                    <motion.tr
+                      key={u.id}
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: i * 0.05 }}
+                      className="group border-b border-slate-50 hover:bg-slate-50/50 transition-colors"
+                    >
+                      <td className="px-8 py-5">
+                        <div className="flex items-center gap-4">
+                          <div className="w-12 h-12 rounded-full bg-gradient-to-br from-indigo-100 to-violet-100 text-indigo-600 flex items-center justify-center font-bold text-lg shadow-sm">
+                            {u.name.charAt(0)}
+                          </div>
+                          <div>
+                            <p className="font-bold text-slate-900">{u.name}</p>
+                            {/* <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wide mt-1 ${u.status === 'BLOCKED' ? 'bg-red-50 text-red-600' : 'bg-green-50 text-green-600'}`}>
+                              <span className={`w-1.5 h-1.5 rounded-full ${u.status === 'BLOCKED' ? 'bg-red-500' : 'bg-green-500'}`} />
+                              {u.status || 'ACTIVE'}
+                            </span> */}
+                          </div>
+                        </div>
+                      </td>
+                      <td className="px-8 py-5">
+                        <div className="space-y-1">
+                          <div className="flex items-center gap-2 text-sm font-medium text-slate-600">
+                            <Mail size={14} className="text-slate-400" />
+                            {u.email}
+                          </div>
+                          <div className="flex items-center gap-2 text-sm font-medium text-slate-600">
+                            <Phone size={14} className="text-slate-400" />
+                            {u.phone || "Not provided"}
+                          </div>
+                        </div>
+                      </td>
+                      <td className="px-8 py-5">
+                        <div className="flex items-center gap-2 text-sm font-medium text-slate-600">
+                          <MapPin size={16} className="text-slate-400" />
+                          {u.location || "Unknown"}
+                        </div>
+                      </td>
+                      <td className="px-8 py-5 text-right">
+                        <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                          <button
+                            onClick={() => toggleBlock(u.id)}
+                            className="p-2 rounded-xl text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 transition-colors"
+                            title="Toggle Block Status"
+                          >
+                            <Shield size={18} />
+                          </button>
+                          <button
+                            onClick={() => alert("Reset password triggered")}
+                            className="p-2 rounded-xl text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 transition-colors"
+                            title="Reset Password"
+                          >
+                            <RefreshCw size={18} />
+                          </button>
+                          <button
+                            onClick={() => removeUser(u.id)}
+                            className="p-2 rounded-xl text-slate-400 hover:text-red-600 hover:bg-red-50 transition-colors"
+                            title="Delete User"
+                          >
+                            <Trash2 size={18} />
+                          </button>
+                        </div>
+                      </td>
+                    </motion.tr>
+                  ))}
+                </AnimatePresence>
+              </tbody>
             </table>
           </div>
         )}
-      </motion.div>
+      </div>
     </div>
   );
 }
-
-

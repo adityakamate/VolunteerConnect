@@ -2,64 +2,12 @@
 
 import { useEffect, useState } from "react";
 import { getRequest } from "@/lib/api";
-
-// Lightweight UI helpers for attractive, interactive cards without extra deps
-const numberFmt = new Intl.NumberFormat("en-US");
-
-function StatCard({ title, value, subtitle, icon, colorFrom = "from-indigo-500", colorTo = "to-purple-500", loading = false }) {
-  return (
-    <div className="relative group" title={title}>
-      <div className={`p-[1px] rounded-2xl bg-gradient-to-r ${colorFrom} ${colorTo} transition-transform duration-300 group-hover:scale-[1.02]`}>
-        <div className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100">
-          <div className="flex items-center justify-between">
-            <div className="text-sm text-gray-500">{title}</div>
-            <div className="opacity-70 group-hover:opacity-100 transition-opacity">{icon}</div>
-          </div>
-          <div className="mt-2 text-3xl font-bold text-gray-900">
-            {loading ? (
-              <span className="inline-block w-16 h-6 rounded animate-pulse bg-gray-200" />
-            ) : (
-              value ?? "-"
-            )}
-          </div>
-          {subtitle && <div className="mt-1 text-xs text-gray-500">{subtitle}</div>}
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function ProgressRing({ percent = 0, size = 120, stroke = 10, label = "Progress", color = "#6366f1" }) {
-  const radius = (size - stroke) / 2;
-  const circumference = 2 * Math.PI * radius;
-  const dashOffset = circumference - (Math.min(100, Math.max(0, percent)) / 100) * circumference;
-  return (
-    <div className="flex flex-col items-center">
-      <svg width={size} height={size} className="transform -rotate-90">
-        <circle cx={size / 2} cy={size / 2} r={radius} stroke="#e5e7eb" strokeWidth={stroke} fill="none" />
-        <circle
-          cx={size / 2}
-          cy={size / 2}
-          r={radius}
-          stroke={color}
-          strokeWidth={stroke}
-          fill="none"
-          strokeLinecap="round"
-          strokeDasharray={circumference}
-          strokeDashoffset={dashOffset}
-          className="transition-[stroke-dashoffset] duration-700 ease-out"
-        />
-      </svg>
-      <div className="mt-3 text-sm text-gray-600">
-        {label}: <span className="font-semibold text-gray-900">{percent}%</span>
-      </div>
-    </div>
-  );
-}
+import { motion } from "framer-motion";
+import { Users, Building2, Calendar, CheckCircle, XCircle, Activity, TrendingUp } from "lucide-react";
 
 export default function AdminDashboardPage() {
   const [stats, setStats] = useState(null);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
   useEffect(() => {
@@ -89,102 +37,202 @@ export default function AdminDashboardPage() {
     completedTasks: stats?.completedTasks ?? 0,
     closedTasks: stats?.closedTasks ?? 0,
   };
+
   const completionRate = totals.totalTasks ? Math.round((totals.completedTasks / totals.totalTasks) * 100) : 0;
   const closureRate = totals.totalTasks ? Math.round((totals.closedTasks / totals.totalTasks) * 100) : 0;
 
+  const statCards = [
+    {
+      label: "Total Users",
+      value: totals.totalUsers,
+      icon: <Users size={24} />,
+      color: "bg-blue-500",
+      lightColor: "bg-blue-50 text-blue-600",
+      delay: 0
+    },
+    {
+      label: "Organizations",
+      value: totals.totalOrganizations,
+      icon: <Building2 size={24} />,
+      color: "bg-emerald-500",
+      lightColor: "bg-emerald-50 text-emerald-600",
+      delay: 0.1
+    },
+    {
+      label: "Total Tasks",
+      value: totals.totalTasks,
+      icon: <Calendar size={24} />,
+      color: "bg-violet-500",
+      lightColor: "bg-violet-50 text-violet-600",
+      delay: 0.2
+    },
+    {
+      label: "Completed",
+      value: totals.completedTasks,
+      icon: <CheckCircle size={24} />,
+      color: "bg-indigo-500",
+      lightColor: "bg-indigo-50 text-indigo-600",
+      delay: 0.3
+    },
+    {
+      label: "Closed",
+      value: totals.closedTasks,
+      icon: <XCircle size={24} />,
+      color: "bg-rose-500",
+      lightColor: "bg-rose-50 text-rose-600",
+      delay: 0.4
+    }
+  ];
+
   return (
-    <div className="space-y-6">
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6">
-        <StatCard
-          title="Total Users"
-          value={loading ? null : numberFmt.format(totals.totalUsers)}
-          subtitle="All registered users"
-          icon={<span>👥</span>}
-          colorFrom="from-sky-500"
-          colorTo="to-cyan-500"
-          loading={loading}
-        />
-        <StatCard
-          title="Organizations"
-          value={loading ? null : numberFmt.format(totals.totalOrganizations)}
-          subtitle="NGOs on platform"
-          icon={<span>🏢</span>}
-          colorFrom="from-emerald-500"
-          colorTo="to-teal-500"
-          loading={loading}
-        />
-        <StatCard
-          title="Total Tasks"
-          value={loading ? null : numberFmt.format(totals.totalTasks)}
-          subtitle="Tasks created"
-          icon={<span>🗂️</span>}
-          colorFrom="from-indigo-500"
-          colorTo="to-purple-500"
-          loading={loading}
-        />
-        <StatCard
-          title="Completed Tasks"
-          value={loading ? null : numberFmt.format(totals.completedTasks)}
-          subtitle={`${completionRate}% completion`}
-          icon={<span>✅</span>}
-          colorFrom="from-violet-500"
-          colorTo="to-fuchsia-500"
-          loading={loading}
-        />
-        <StatCard
-          title="Closed Tasks"
-          value={loading ? null : numberFmt.format(totals.closedTasks)}
-          subtitle={`${closureRate}% closed`}
-          icon={<span>🔒</span>}
-          colorFrom="from-rose-500"
-          colorTo="to-orange-500"
-          loading={loading}
-        />
+    <div className="space-y-12">
+      {/* Header */}
+      <div className="relative overflow-hidden rounded-[2.5rem] bg-slate-900 p-10 md:p-14 shadow-2xl shadow-slate-900/20">
+        <div className="absolute top-0 right-0 -mt-20 -mr-20 w-96 h-96 bg-indigo-600/30 rounded-full blur-3xl animate-pulse"></div>
+        <div className="absolute bottom-0 left-0 -mb-20 -ml-20 w-80 h-80 bg-fuchsia-600/20 rounded-full blur-3xl animate-pulse delay-1000"></div>
+
+        <div className="relative z-10 flex flex-col gap-4">
+          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/10 backdrop-blur-md border border-white/10 text-indigo-200 text-sm font-medium w-fit">
+            <Activity size={14} className="text-indigo-300" />
+            <span>Pre-release Admin Build</span>
+          </div>
+          <h1 className="text-4xl md:text-5xl font-bold text-white tracking-tight">
+            Admin Dashboard
+          </h1>
+          <p className="text-slate-300 text-lg max-w-2xl leading-relaxed">
+            Overview of platform activity, user growth, and task management metrics.
+          </p>
+        </div>
       </div>
 
-      {error && <div className="text-red-600">{error}</div>}
-
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div className="bg-white rounded-2xl p-6 shadow border border-gray-100">
-          <div className="flex items-center justify-between">
-            <div className="text-sm text-gray-500">Task Progress</div>
-            <span className="text-xs text-gray-400">Auto-updates</span>
-          </div>
-          <div className="mt-6 grid grid-cols-2 place-items-center">
-            <ProgressRing percent={completionRate} label="Completed" color="#8b5cf6" />
-            <ProgressRing percent={closureRate} label="Closed" color="#f43f5e" />
-          </div>
+      {loading ? (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6">
+          {[...Array(5)].map((_, i) => (
+            <div key={i} className="bg-white p-6 rounded-[2rem] shadow-sm border border-slate-100 animate-pulse h-32">
+              <div className="h-10 w-10 bg-slate-100 rounded-xl mb-4" />
+              <div className="h-6 w-1/2 bg-slate-100 rounded-md mb-2" />
+              <div className="h-8 w-3/4 bg-slate-50 rounded-md" />
+            </div>
+          ))}
         </div>
-
-        <div className="bg-white rounded-2xl p-6 shadow border border-gray-100">
-          <div className="flex items-center justify-between">
-            <div className="text-sm text-gray-500">Quick Insights</div>
-            <span className="text-xs text-gray-400">Today</span>
-          </div>
-          <div className="mt-4 grid gap-3">
-            <div className="flex items-center justify-between p-3 rounded-xl bg-gradient-to-r from-amber-50 to-yellow-50 border border-amber-100">
-              <div className="text-sm text-amber-700">Avg. tasks per org</div>
-              <div className="font-semibold text-amber-800">
-                {totals.totalOrganizations ? (totals.totalTasks / totals.totalOrganizations).toFixed(1) : "-"}
+      ) : (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6">
+          {statCards.map((stat, idx) => (
+            <motion.div
+              key={idx}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: stat.delay }}
+              className="bg-white p-6 rounded-[2rem] shadow-xl shadow-slate-200/50 border border-white hover:border-indigo-100 hover:shadow-2xl hover:shadow-indigo-500/10 transition-all group"
+            >
+              <div className="flex items-start justify-between mb-4">
+                <div className={`p-3 rounded-2xl ${stat.lightColor} group-hover:scale-110 transition-transform duration-300`}>
+                  {stat.icon}
+                </div>
+                {stat.label === "Completed" && (
+                  <span className="text-xs font-bold text-green-600 bg-green-50 px-2 py-1 rounded-full">
+                    {completionRate}%
+                  </span>
+                )}
+                {stat.label === "Closed" && (
+                  <span className="text-xs font-bold text-rose-600 bg-rose-50 px-2 py-1 rounded-full">
+                    {closureRate}%
+                  </span>
+                )}
               </div>
-            </div>
-            <div className="flex items-center justify-between p-3 rounded-xl bg-gradient-to-r from-emerald-50 to-teal-50 border border-emerald-100">
-              <div className="text-sm text-emerald-700">Completion ratio</div>
-              <div className="font-semibold text-emerald-800">
-                {totals.totalTasks ? `${totals.completedTasks}/${totals.totalTasks}` : "-"}
+              <div>
+                <p className="text-slate-500 font-medium text-sm mb-1">{stat.label}</p>
+                <h3 className="text-3xl font-bold text-slate-900 tracking-tight">{stat.value}</h3>
               </div>
-            </div>
-            <div className="flex items-center justify-between p-3 rounded-xl bg-gradient-to-r from-rose-50 to-red-50 border border-rose-100">
-              <div className="text-sm text-rose-700">Closure ratio</div>
-              <div className="font-semibold text-rose-800">
-                {totals.totalTasks ? `${totals.closedTasks}/${totals.totalTasks}` : "-"}
-              </div>
-            </div>
-          </div>
+            </motion.div>
+          ))}
         </div>
+      )}
+
+      {/* Charts / Insights Area */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.5 }}
+          className="bg-white rounded-[2.5rem] p-8 shadow-xl shadow-slate-200/50 border border-white flex flex-col"
+        >
+          <div className="flex items-center gap-3 mb-8">
+            <div className="p-3 bg-indigo-50 text-indigo-600 rounded-xl">
+              <TrendingUp size={24} />
+            </div>
+            <div>
+              <h3 className="text-xl font-bold text-slate-900">Platform Health</h3>
+              <p className="text-slate-500 text-sm">Key performance indicators</p>
+            </div>
+          </div>
+
+          <div className="space-y-6 flex-1">
+            <div className="space-y-2">
+              <div className="flex justify-between text-sm font-bold text-slate-700">
+                <span>Task Completion Rate</span>
+                <span>{completionRate}%</span>
+              </div>
+              <div className="h-3 bg-slate-100 rounded-full overflow-hidden">
+                <motion.div
+                  initial={{ width: 0 }}
+                  animate={{ width: `${completionRate}%` }}
+                  transition={{ duration: 1, delay: 0.8 }}
+                  className="h-full bg-gradient-to-r from-indigo-500 to-indigo-400 rounded-full"
+                />
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <div className="flex justify-between text-sm font-bold text-slate-700">
+                <span>Task Closure Rate</span>
+                <span>{closureRate}%</span>
+              </div>
+              <div className="h-3 bg-slate-100 rounded-full overflow-hidden">
+                <motion.div
+                  initial={{ width: 0 }}
+                  animate={{ width: `${closureRate}%` }}
+                  transition={{ duration: 1, delay: 1 }}
+                  className="h-full bg-gradient-to-r from-rose-500 to-rose-400 rounded-full"
+                />
+              </div>
+            </div>
+
+            <div className="p-4 bg-slate-50 rounded-2xl border border-slate-100 mt-auto">
+              <p className="text-sm text-slate-600 italic">
+                "High task completion rates indicate an active volunteer base. Keep monitoring pending applications."
+              </p>
+            </div>
+          </div>
+        </motion.div>
+
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.6 }}
+          className="bg-indigo-600 rounded-[2.5rem] p-8 text-white relative overflow-hidden flex flex-col justify-center items-center text-center"
+        >
+          <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full -mt-20 -mr-20 blur-3xl" />
+          <div className="absolute bottom-0 left-0 w-48 h-48 bg-black/10 rounded-full -mb-10 -ml-10 blur-2xl" />
+
+          <div className="relative z-10 space-y-4">
+            <div className="w-16 h-16 bg-white/20 rounded-2xl flex items-center justify-center mx-auto backdrop-blur-sm">
+              <Activity size={32} className="text-white" />
+            </div>
+            <h3 className="text-2xl font-bold">Quick Analysis</h3>
+            <div className="grid grid-cols-2 gap-4 w-full max-w-sm mx-auto mt-4">
+              <div className="bg-white/10 backdrop-blur-sm p-4 rounded-2xl border border-white/10">
+                <p className="text-3xl font-bold">{(totals.totalTasks / (totals.totalOrganizations || 1)).toFixed(1)}</p>
+                <p className="text-xs text-indigo-200 uppercase tracking-wider font-bold mt-1">Avg Tasks / Org</p>
+              </div>
+              <div className="bg-white/10 backdrop-blur-sm p-4 rounded-2xl border border-white/10">
+                <p className="text-3xl font-bold">{(totals.totalOrganizations / (totals.totalUsers || 1) * 100).toFixed(1)}%</p>
+                <p className="text-xs text-indigo-200 uppercase tracking-wider font-bold mt-1">Org Ratio</p>
+              </div>
+            </div>
+          </div>
+        </motion.div>
       </div>
     </div>
   );
 }
-
-

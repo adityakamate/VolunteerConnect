@@ -2,19 +2,14 @@
 
 import { useEffect, useState } from "react";
 import { getRequest } from "@/lib/api";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
+import { Search, Filter, Calendar, Users, Briefcase, LayoutList, Building2, CheckCircle, Clock, XCircle, Eye } from "lucide-react";
+import Link from "next/link";
 
 export default function AdminTasksPage() {
   const [orgTypes, setOrgTypes] = useState([
-    "OLDAGE",
-    "CHILDREN",
-    "NGO",
-    "DISABLED",
-    "EDUCATION",
-    "ORPHANAGE",
-    "HEALTH",
-    "ENVIRONMENT",
-    "OTHER",
+    "OLDAGE", "CHILDREN", "NGO", "DISABLED", "EDUCATION",
+    "ORPHANAGE", "HEALTH", "ENVIRONMENT", "OTHER",
   ]);
   const [selectedType, setSelectedType] = useState("");
   const [organizations, setOrganizations] = useState([]);
@@ -22,7 +17,6 @@ export default function AdminTasksPage() {
   const [tasks, setTasks] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-  const [hoveredRow, setHoveredRow] = useState(null);
 
   useEffect(() => {
     const fetchOrganizationsByType = async () => {
@@ -35,7 +29,7 @@ export default function AdminTasksPage() {
       try {
         setLoading(true);
         const token = localStorage.getItem("token");
-        const res = await getRequest(`/admin/organizations?type=${encodeURIComponent(selectedType)}` );
+        const res = await getRequest(`/admin/organizations?type=${encodeURIComponent(selectedType)}`);
         const data = Array.isArray(res?.data) ? res.data : [];
         setOrganizations(data.map((o) => ({ id: o.orgId ?? o.id, name: o.name ?? o.organizationName ?? `Org ${o.orgId ?? o.id}` })));
         setSelectedOrgId("");
@@ -72,7 +66,8 @@ export default function AdminTasksPage() {
             capacity: t.capacity,
             startDate: t.startDate,
             endDate: t.endDate,
-            description: t.description || "No description available"
+            description: t.description || "No description available",
+            imageUrl: "http://localhost:8080/"+t.images
           }))
         );
         setError(null);
@@ -86,159 +81,181 @@ export default function AdminTasksPage() {
     fetchTasksForOrg();
   }, [selectedOrgId, organizations]);
 
+  const formatDate = (value) => {
+    if (!value) return "-";
+    return new Date(value).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
+  };
+
   const getStatusColor = (status) => {
-    switch(status) {
-      case "OPEN":
-        return "bg-emerald-100 text-emerald-800 border-emerald-200";
-      case "CLOSED":
-        return "bg-red-100 text-red-800 border-red-200";
-      case "PENDING":
-        return "bg-yellow-100 text-yellow-800 border-yellow-200";
-      default:
-        return "bg-gray-100 text-gray-800 border-gray-200";
+    switch (status) {
+      case "OPEN": return "bg-emerald-100 text-emerald-800 border-emerald-200";
+      case "CLOSED": return "bg-red-100 text-red-800 border-red-200";
+      default: return "bg-slate-100 text-slate-800 border-slate-200";
     }
   };
 
   return (
-    <div className="p-6 max-w-7xl mx-auto">
-      <motion.div 
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5 }}
-        className="mb-8"
-      >
-        <h1 className="text-3xl font-bold text-indigo-900 mb-2">Task Management</h1>
-        <p className="text-gray-600">Browse and manage volunteer tasks across organizations</p>
-      </motion.div>
+    <div className="space-y-8">
+      {/* Header */}
+      <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
+        <motion.div
+          initial={{ opacity: 0, x: -20 }}
+          animate={{ opacity: 1, x: 0 }}
+        >
+          <h1 className="text-4xl font-bold text-slate-900 tracking-tight">Task Management</h1>
+          <p className="text-slate-500 text-lg mt-2">Browse and manage volunteer tasks across organizations.</p>
+        </motion.div>
+      </div>
 
-      <motion.div 
+      {/* Filters */}
+      <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5, delay: 0.2 }}
-        className="bg-white rounded-2xl p-6 shadow-lg border border-indigo-100 mb-6"
+        transition={{ delay: 0.1 }}
+        className="bg-white rounded-[2rem] p-6 shadow-xl shadow-slate-200/50 border border-white"
       >
-        <h2 className="text-xl font-semibold text-indigo-800 mb-4">Filter Tasks</h2>
+        <div className="flex items-center gap-3 mb-6">
+          <div className="p-2 bg-indigo-50 text-indigo-600 rounded-lg">
+            <Filter size={20} />
+          </div>
+          <h2 className="text-lg font-bold text-slate-900">Filter Tasks</h2>
+        </div>
+
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className="space-y-2">
-            <label className="block text-sm font-medium text-gray-700">Organization Type</label>
+            <label className="block text-sm font-bold text-slate-700 ml-1">Organization Type</label>
             <div className="relative">
-              <select 
-                value={selectedType} 
-                onChange={(e) => setSelectedType(e.target.value)} 
-                className="w-full border border-indigo-200 rounded-lg px-4 py-3 bg-indigo-50 text-indigo-900 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all duration-200 appearance-none"
+              <select
+                value={selectedType}
+                onChange={(e) => setSelectedType(e.target.value)}
+                className="w-full appearance-none rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3.5 text-slate-700 font-medium focus:border-indigo-500 focus:bg-white focus:ring-4 focus:ring-indigo-500/10 transition-all outline-none"
               >
-                <option value="">Select type</option>
+                <option value="">Select Type...</option>
                 {orgTypes.map((t) => (
                   <option key={t} value={t}>{t.charAt(0) + t.slice(1).toLowerCase()}</option>
                 ))}
               </select>
-              <div className="absolute inset-y-0 right-0 flex items-center px-2 pointer-events-none">
-                <svg className="w-5 h-5 text-indigo-500" fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
-                </svg>
-              </div>
+              <Building2 className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" size={18} />
             </div>
           </div>
+
           <div className="space-y-2">
-            <label className="block text-sm font-medium text-gray-700">Organization</label>
+            <label className="block text-sm font-bold text-slate-700 ml-1">Organization</label>
             <div className="relative">
               <select
                 value={selectedOrgId}
                 onChange={(e) => setSelectedOrgId(e.target.value)}
                 disabled={!selectedType || organizations.length === 0}
-                className="w-full border border-indigo-200 rounded-lg px-4 py-3 bg-indigo-50 text-indigo-900 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all duration-200 appearance-none disabled:bg-gray-100 disabled:text-gray-500 disabled:border-gray-200"
+                className="w-full appearance-none rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3.5 text-slate-700 font-medium focus:border-indigo-500 focus:bg-white focus:ring-4 focus:ring-indigo-500/10 transition-all outline-none disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                <option value="">{!selectedType ? 'Select type first' : (organizations.length ? 'Select organization' : 'No organizations found')}</option>
+                <option value="">{!selectedType ? 'Select type first' : (organizations.length ? 'Select Organization...' : 'No organizations found')}</option>
                 {organizations.map((o) => (
                   <option key={o.id} value={o.id}>{o.name}</option>
                 ))}
               </select>
-              <div className="absolute inset-y-0 right-0 flex items-center px-2 pointer-events-none">
-                <svg className="w-5 h-5 text-indigo-500" fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
-                </svg>
-              </div>
+              <Briefcase className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" size={18} />
             </div>
           </div>
         </div>
       </motion.div>
 
-      <motion.div 
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ duration: 0.5, delay: 0.4 }}
-        className="bg-white rounded-2xl shadow-lg border border-indigo-100 overflow-hidden"
-      >
-        {error && (
-          <div className="p-4 bg-red-50 border-b border-red-100 text-red-700 flex items-center">
-            <svg className="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
-              <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
-            </svg>
-            {error}
-          </div>
-        )}
-        
+      {/* Task List */}
+      <div>
         {loading ? (
-          <div className="p-8 flex justify-center items-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-indigo-500"></div>
+          <div className="flex flex-col gap-6">
+            {[...Array(3)].map((_, i) => (
+              <div key={i} className="bg-white rounded-[2.5rem] p-4 shadow-sm border border-slate-100 animate-pulse flex flex-col md:flex-row gap-6 items-center">
+                <div className="w-full md:w-64 h-48 md:h-40 bg-slate-100 rounded-[2rem] shrink-0"></div>
+                <div className="flex-1 w-full space-y-3">
+                  <div className="w-2/3 h-6 bg-slate-100 rounded-full"></div>
+                  <div className="w-1/2 h-4 bg-slate-50 rounded-full"></div>
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : error ? (
+          <div className="text-center py-20 bg-white rounded-[2.5rem] border border-dashed border-red-200 text-red-500">
+            <XCircle size={32} className="mx-auto mb-2" />
+            <p>{error}</p>
+          </div>
+        ) : tasks.length === 0 ? (
+          <div className="text-center py-32 bg-white rounded-[2.5rem] border border-dashed border-slate-200 shadow-sm">
+            <div className="w-24 h-24 bg-slate-50 text-slate-300 rounded-full flex items-center justify-center mx-auto mb-6">
+              <LayoutList size={48} />
+            </div>
+            <h3 className="text-2xl font-bold text-slate-900">No tasks found</h3>
+            <p className="text-slate-500 mt-2">Try selecting a different organization.</p>
           </div>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="min-w-full text-sm">
-              <thead className="bg-indigo-50 text-indigo-900">
-                <tr>
-                  <th className="text-left px-6 py-4 font-semibold">Task</th> 
-                  <th className="text-left px-6 py-4 font-semibold">Organization</th>
-                  <th className="text-left px-6 py-4 font-semibold">Capacity</th>
-                  <th className="text-left px-6 py-4 font-semibold">Start Date</th>
-                  <th className="text-left px-6 py-4 font-semibold">End Date</th>
-                  <th className="text-left px-6 py-4 font-semibold">Status</th>
-                </tr>
-              </thead>
-              <tbody>
-                {tasks.map((t, index) => (
-                  <motion.tr 
-                    key={t.id} 
-                    className={`border-t border-indigo-50 transition-all duration-200 ${hoveredRow === t.id ? 'bg-indigo-50' : index % 2 === 0 ? 'bg-white' : 'bg-indigo-25'}`}
-                    onMouseEnter={() => setHoveredRow(t.id)}
-                    onMouseLeave={() => setHoveredRow(null)}
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.3, delay: 0.1 * index }}
-                  >
-                    <td className="px-6 py-4">
-                      <div className="font-medium text-indigo-900">{t.title}</div>
-                      <div className="text-xs text-gray-500 mt-1 max-w-xs truncate">{t.description}</div>
-                    </td>
-                    <td className="px-6 py-4 text-gray-700">{t.ngo}</td>
-                    <td className="px-6 py-4 text-gray-700">{t.capacity ?? '-'}</td>
-                    <td className="px-6 py-4 text-gray-700">{t.startDate ? new Date(t.startDate).toLocaleDateString() : '-'}</td>
-                    <td className="px-6 py-4 text-gray-700">{t.endDate ? new Date(t.endDate).toLocaleDateString() : '-'}</td>
-                    <td className="px-6 py-4">
-                      <span className={`px-3 py-1 rounded-full text-xs font-semibold border ${getStatusColor(t.status)}`}>
-                        {t.status}
-                      </span>
-                    </td>
-                  </motion.tr>
-                ))}
-                {tasks.length === 0 && !loading && (
-                  <tr>
-                    <td colSpan={6} className="px-6 py-12 text-center">
-                      <div className="flex flex-col items-center justify-center text-gray-500">
-                        <svg className="w-16 h-16 mb-4 text-indigo-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
-                        </svg>
-                        <p className="text-xl font-medium text-indigo-900">No tasks to display</p>
-                        <p className="text-gray-500 mt-1">Select an organization to view its tasks</p>
+          <motion.div layout className="flex flex-col gap-6">
+            <AnimatePresence mode="popLayout">
+              {tasks.map((task, index) => (
+                <motion.div
+                  key={task.id || index}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: index * 0.05 }}
+                  className="group bg-white rounded-[2.5rem] p-4 md:p-6 shadow-xl shadow-slate-200/50 hover:shadow-2xl hover:shadow-indigo-500/10 border border-white hover:border-indigo-100 transition-all duration-300 flex flex-col md:flex-row gap-6 items-start md:items-center"
+                >
+                  {/* Image */}
+                  <div className="relative w-full md:w-72 aspect-video md:aspect-auto md:h-48 rounded-[2rem] bg-indigo-50 overflow-hidden shrink-0">
+                    {task.imageUrl ? (
+                      <img
+                        src={task.imageUrl}
+                        alt={task.title}
+                        className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
+                      />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center text-indigo-300">
+                        <LayoutList size={48} />
                       </div>
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
+                    )}
+                    <div className="absolute top-4 right-4 bg-white/90 backdrop-blur px-3 py-1 rounded-full text-xs font-bold text-slate-800 shadow-sm">
+                      {task.capacity ?? 0} spots
+                    </div>
+                  </div>
+
+                  {/* Content */}
+                  <div className="flex-1 w-full space-y-4">
+                    <div className="space-y-2">
+                      <div className="flex justify-between items-start">
+                        <h3 className="text-xl font-bold text-slate-900 group-hover:text-indigo-600 transition-colors">
+                          {task.title}
+                        </h3>
+                        <span className={`px-3 py-1 rounded-full text-xs font-bold border ${getStatusColor(task.status)}`}>
+                          {task.status}
+                        </span>
+                      </div>
+                      <p className="text-slate-500 text-sm line-clamp-2 leading-relaxed">
+                        {task.description}
+                      </p>
+                    </div>
+
+                    <div className="flex flex-wrap items-center gap-4 text-sm text-slate-500 font-medium">
+                      <div className="flex items-center gap-2 bg-slate-50 px-3 py-1.5 rounded-lg">
+                        <Calendar size={16} className="text-indigo-400" />
+                        <span>{formatDate(task.startDate)} - {formatDate(task.endDate)}</span>
+                      </div>
+                      <div className="flex items-center gap-2 bg-slate-50 px-3 py-1.5 rounded-lg">
+                        <Building2 size={16} className="text-indigo-400" />
+                        <span>{task.ngo}</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Actions */}
+                  <div className="w-full md:w-auto shrink-0 pt-4 md:pt-0 border-t md:border-t-0 md:border-l border-slate-100 md:pl-6 flex flex-col gap-3">
+                    {/* Placeholder for future admin actions */}
+                    {/* <button className="flex items-center justify-center gap-2 w-full md:w-auto px-6 py-3 rounded-xl bg-slate-100 text-slate-600 font-bold hover:bg-slate-200 transition-colors text-sm">
+                      <Eye size={18} /> View Details
+                    </button> */}
+                  </div>
+                </motion.div>
+              ))}
+            </AnimatePresence>
+          </motion.div>
         )}
-      </motion.div>
+      </div>
     </div>
   );
 }

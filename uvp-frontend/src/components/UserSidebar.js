@@ -23,7 +23,7 @@ export default function UserSidebar() {
   const { name } = useName();
 
   return (
-    <div>
+    <div className="z-50">
       {/* Navbar */}
       <motion.nav 
         initial={{ y: -20, opacity: 0 }}

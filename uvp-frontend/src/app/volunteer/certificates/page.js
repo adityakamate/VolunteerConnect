@@ -1,9 +1,8 @@
 "use client";
 import React, { useEffect, useState } from "react";
-import { Download } from "lucide-react";
 import { getRequest } from "@/lib/api";
 import { motion } from "framer-motion";
-import { FaMedal, FaDownload } from "react-icons/fa";
+import { Download, Medal, Sparkles, Loader2, Calendar } from "lucide-react";
 
 const Certificates = () => {
   const [certificates, setCertificates] = useState([]);
@@ -35,15 +34,11 @@ const Certificates = () => {
 
   const downloadPDF = async (cert) => {
     try {
-      console.log("Downloading cert:", cert);
-  
       const response = await getRequest(
         `/volunteer/certificates/download/${cert.userId}/${cert.taskId}`,
-        {
-          responseType: "blob",
-        }
+        { responseType: "blob" }
       );
-  
+
       const url = window.URL.createObjectURL(new Blob([response.data]));
       const link = document.createElement("a");
       link.href = url;
@@ -55,6 +50,7 @@ const Certificates = () => {
       console.error("Error downloading PDF:", err.response?.data || err.message);
     }
   };
+
   const formatDate = (value) => {
     if (!value) return "-";
     const date = new Date(value);
@@ -63,119 +59,120 @@ const Certificates = () => {
   };
 
   return (
-    <motion.div 
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      transition={{ duration: 0.5 }}
-      className="space-y-8"
-    >
-      <motion.div 
-        initial={{ y: -20 }}
-        animate={{ y: 0 }}
-        transition={{ duration: 0.6, type: "spring" }}
-        className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-indigo-600 via-purple-600 to-indigo-700 p-8 shadow-lg"
-      >
-        <div className="absolute -right-10 -top-10 w-40 h-40 bg-white/10 rounded-full blur-xl" />
-        <div className="absolute -left-12 -bottom-12 w-56 h-56 bg-black/10 rounded-full blur-2xl" />
-        <div className="relative">
-          <h1 className="text-3xl md:text-4xl font-bold text-white">Certificates</h1>
-          <p className="text-indigo-50 mt-2">View and download your earned certificates.</p>
-          <div className="mt-4 inline-flex items-center gap-2 text-indigo-100 text-sm bg-white/10 px-3 py-1 rounded-full backdrop-blur">
-            <span className="w-2 h-2 rounded-full bg-indigo-300 animate-pulse" />
-            {certificates.length} total certificates
+    <div className="min-h-screen w-full font-sans text-slate-900 bg-[#F8FAFC]">
+      <div className="max-w-6xl mx-auto px-6 py-12 space-y-12">
+        {/* Header Section with Glass Effect */}
+        <div className="relative overflow-hidden rounded-[2.5rem] bg-slate-900 p-10 md:p-16 shadow-2xl shadow-slate-900/20">
+          <div className="absolute top-0 right-0 -mt-20 -mr-20 w-96 h-96 bg-fuchsia-600/30 rounded-full blur-3xl animate-pulse"></div>
+          <div className="absolute bottom-0 left-0 -mb-20 -ml-20 w-80 h-80 bg-indigo-600/20 rounded-full blur-3xl animate-pulse delay-1000"></div>
+
+          <div className="relative z-10 flex flex-col md:flex-row md:items-end justify-between gap-8">
+            <div className="space-y-4">
+              <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/10 backdrop-blur-md border border-white/10 text-fuchsia-200 text-sm font-medium">
+                <Sparkles size={14} className="text-fuchsia-300" />
+                <span>Your Achievements</span>
+              </div>
+              <h1 className="text-4xl md:text-6xl font-bold text-white tracking-tight">
+                Certificates
+              </h1>
+              <p className="text-slate-300 text-lg max-w-xl leading-relaxed">
+                View and download the certificates you've earned through your volunteering journey.
+              </p>
+            </div>
+
+            <div className="flex items-center gap-2 bg-white/10 backdrop-blur-md px-6 py-3 rounded-2xl border border-white/10 text-white font-medium">
+              <Medal size={20} className="text-yellow-400" />
+              <span>{certificates.length} Earned</span>
+            </div>
           </div>
         </div>
-      </motion.div>
 
-      <div className="p-2">
-        {loading ? (
-          <motion.div 
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
-          >
-            {[...Array(6)].map((_, i) => (
-              <motion.div 
-                key={i} 
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: i * 0.1 }}
-                className="bg-white rounded-2xl p-6 shadow animate-pulse"
-              >
-                <div className="h-6 w-2/3 bg-gray-200 rounded mb-3" />
-                <div className="h-4 w-1/3 bg-gray-200 rounded mb-6" />
-                <div className="w-28 h-28 bg-gray-200 rounded mb-6" />
-                <div className="h-10 w-full bg-gray-200 rounded" />
-              </motion.div>
-            ))}
-          </motion.div>
-        ) : certificates.length === 0 ? (
-          <motion.div 
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            className="text-center py-16"
-          >
-            <motion.div 
-              initial={{ scale: 0.8 }}
-              animate={{ scale: 1 }}
-              transition={{ duration: 0.5, type: "spring" }}
-              className="w-28 h-28 mx-auto mb-6 bg-indigo-50 text-indigo-600 rounded-full flex items-center justify-center shadow-inner"
+        {/* Certificates Grid */}
+        <div className="min-h-[400px]">
+          {loading ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+              {[...Array(6)].map((_, i) => (
+                <div key={i} className="bg-white rounded-[2.5rem] p-6 h-96 shadow-sm border border-white animate-pulse flex flex-col gap-4">
+                  <div className="w-full h-48 bg-slate-100 rounded-[2rem]"></div>
+                  <div className="w-2/3 h-6 bg-slate-100 rounded-full mt-4"></div>
+                  <div className="w-1/2 h-4 bg-slate-100 rounded-full"></div>
+                </div>
+              ))}
+            </div>
+          ) : certificates.length === 0 ? (
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              className="text-center py-20 bg-white rounded-[3rem] border border-slate-100 shadow-sm"
             >
-              <FaMedal className="text-5xl" />
+              <div className="w-24 h-24 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-6 text-slate-300">
+                <Medal size={40} />
+              </div>
+              <h3 className="text-2xl font-bold text-slate-900">No certificates yet</h3>
+              <p className="text-slate-500 mt-2">Complete tasks and submit proofs to earn certificates.</p>
             </motion.div>
-            <h2 className="text-2xl font-semibold text-gray-800 mb-2">No certificates yet</h2>
-            <p className="text-gray-600 mb-6">Complete tasks and submit proofs to earn certificates.</p>
-          </motion.div>
-        ) : (
-          <motion.div 
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
-          >
-            {certificates.map((cert, index) => (
-              <motion.div
-                key={cert.certificateId}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.1 * index }}
-                whileHover={{ y: -5, transition: { duration: 0.2 } }}
-                className="group relative bg-white rounded-2xl p-6 shadow border border-gray-100 hover:shadow-xl transition duration-200"
-              >
-                <div className="absolute inset-0 rounded-2xl bg-gradient-to-b from-transparent to-indigo-50 opacity-0 group-hover:opacity-100 transition" />
-                <div className="relative flex flex-col items-center text-center">
-                  <div className="mb-3 inline-flex items-center gap-2 text-xs font-medium text-indigo-700 bg-indigo-50 px-3 py-1 rounded-full">
-                    <span className="w-1.5 h-1.5 rounded-full bg-indigo-500" />
-                    Certificate
-                  </div>
-                  <h2 className="text-lg font-semibold text-gray-900">{cert.taskName}</h2>
-                  <p className="text-sm text-gray-500 mb-4">Issued on {formatDate(cert.issueDate)}</p>
-
-                  {cert.qrCode && (
-                    <div className="mb-5">
+          ) : (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8"
+            >
+              {certificates.map((cert, index) => (
+                <motion.div
+                  key={cert.certificateId}
+                  initial={{ opacity: 0, y: 30 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: index * 0.1, type: "spring", stiffness: 100 }}
+                  whileHover={{ y: -10 }}
+                  className="group relative bg-white rounded-[2.5rem] p-6 shadow-xl shadow-slate-200/50 hover:shadow-2xl hover:shadow-fuchsia-500/20 border border-white transition-all duration-300 flex flex-col"
+                >
+                  <div className="relative w-full aspect-square rounded-[2rem] bg-slate-50 border border-slate-100 overflow-hidden mb-6 flex items-center justify-center group-hover:border-fuchsia-100 transition-colors">
+                    {cert.qrCode ? (
                       <img
                         src={`data:image/png;base64,${cert.qrCode}`}
-                        alt="QR Code"
-                        className="w-28 h-28 border p-1 rounded-md shadow-sm transition-transform duration-200 group-hover:scale-105"
+                        alt="Certificate QR"
+                        className="w-48 h-48 object-contain mix-blend-multiply opacity-80 group-hover:opacity-100 group-hover:scale-105 transition-all duration-500"
                       />
-                    </div>
-                  )}
+                    ) : (
+                      <Medal size={64} className="text-slate-200" />
+                    )}
 
-                  <motion.button
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                    onClick={() => downloadPDF(cert)}
-                    className="relative inline-flex items-center justify-center gap-2 w-full bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2.5 rounded-xl shadow-md transition"
-                  >
-                    <FaDownload size={16} />
-                    Download PDF
-                  </motion.button>
-                </div>
-              </motion.div>
-            ))}
-          </motion.div>
-        )}
+                    <div className="absolute top-4 right-4">
+                      <div className="w-10 h-10 rounded-full bg-white shadow-md flex items-center justify-center text-yellow-400">
+                        <Medal size={20} />
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="flex-1 space-y-2">
+                    <h2 className="text-xl font-bold text-slate-900 group-hover:text-fuchsia-600 transition-colors line-clamp-2">
+                      {cert.taskName}
+                    </h2>
+                    <div className="flex items-center gap-2 text-sm text-slate-500 font-medium">
+                      <Calendar size={14} />
+                      Issued {formatDate(cert.issueDate)}
+                    </div>
+                  </div>
+
+                  <div className="mt-8 pt-6 border-t border-slate-100">
+                    <button
+                      onClick={() => downloadPDF(cert)}
+                      className="w-full relative group/btn flex items-center justify-center gap-2 bg-slate-900 text-white py-3.5 px-6 rounded-xl font-bold overflow-hidden hover:shadow-lg hover:shadow-fuchsia-500/25 transition-all active:scale-95"
+                    >
+                      <div className="absolute inset-0 bg-gradient-to-r from-fuchsia-600 to-purple-600 opacity-0 group-hover/btn:opacity-100 transition-opacity duration-300" />
+                      <span className="relative z-10 flex items-center gap-2">
+                        <Download size={18} />
+                        Download PDF
+                      </span>
+                    </button>
+                  </div>
+                </motion.div>
+              ))}
+            </motion.div>
+          )}
+        </div>
       </div>
-    </motion.div>
+    </div>
   );
 };
 

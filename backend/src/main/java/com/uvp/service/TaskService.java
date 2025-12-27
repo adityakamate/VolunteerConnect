@@ -49,7 +49,6 @@ public class TaskService {
 
     public List<TaskProjection> getTasksByStatusUserId(Integer orgId,String status)  {
         Task.TaskStatus taskStatus=Task.TaskStatus.valueOf((status.toUpperCase()));
-//        OrganizationHome org=organizationHomeRepository.findById(orgId).orElseThrow();
         return taskRepository.findByOrganizationHomeOrgIdAndStatusOrderByCreatedAtDesc(orgId,taskStatus);
     }
 
@@ -87,8 +86,6 @@ public class TaskService {
         Task existingTask = taskRepository.findById(taskId)
                 .orElseThrow(() -> new RuntimeException("Task not found with ID: " + taskId));
 
-
-        // ✅ Update all fields (overwrite directly)
         existingTask.setTitle(updatedTask.getTitle());
         existingTask.setDescription(updatedTask.getDescription());
         existingTask.setCapacity(updatedTask.getCapacity());
@@ -96,7 +93,6 @@ public class TaskService {
         existingTask.setEndDate(updatedTask.getEndDate());
         existingTask.setLocationLink(updatedTask.getLocationLink());
 
-        // ✅ Handle image update
         if (newImage != null && !newImage.isEmpty()) {
             // Delete old image if exists
             if (existingTask.getImages() != null) {
@@ -118,7 +114,7 @@ public class TaskService {
             existingTask.setImages(filepath.toString().replace("\\", "/"));
         }
 
-        // ✅ Save updated task
+        //  Save updated task
         return taskRepository.save(existingTask);
     }
 

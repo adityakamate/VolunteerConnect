@@ -162,7 +162,6 @@ export default function VolunteerAppliedTasksPage() {
                   >
                     {/* Image Section */}
                     <div className="w-full md:w-72 h-56 md:h-auto shrink-0 relative overflow-hidden rounded-[2rem]">
-                      <div className="absolute inset-0 bg-slate-200 animate-pulse" />
                       {task.image || task.imageUrl ? (
                         <img
                           src={task.image || task.imageUrl}
